@@ -166,8 +166,7 @@ def normalize_ans(val: str) -> str:
 
 
 init_db()
-
-qp_user = st.query_params.get("u", "")
+    qp_user = st.query_params.get("u", "")
 if "logged_in" not in st.session_state:
     if qp_user and user_exists(qp_user):
         st.session_state.logged_in = True
@@ -197,7 +196,31 @@ css_parts = [
     ".stTabs [data-baseweb='tab-list'] { background: transparent !important; gap: 12px; border-bottom: 2px solid rgba(17,18,22,0.12); margin-bottom: 16px; }",
     ".stTabs [data-baseweb='tab'] { background: transparent !important; color: #52525B !important; font-weight: 600 !important; }",
     ".stTabs [aria-selected='true'] { color: #111216 !important; border-bottom: 3px solid #FACC15 !important; }",
-    if not st.session_state.logged_in:
+    "div.stButton > button, div.stFormSubmitButton > button { background-color: #111216 !important; color: #FFFFFF !important; border: 1.5px solid #111216 !important; border-radius: 10px !important; padding: 10px 18px !important; font-weight: 600 !important; transition: all 0.2s ease !important; }",
+    "div.stButton > button p, div.stFormSubmitButton > button p { color: #FFFFFF !important; }",
+    "div.stButton > button:hover, div.stFormSubmitButton > button:hover { background-color: #FACC15 !important; color: #111216 !important; transform: translateY(-1px) !important; }",
+    "div.stButton > button:hover p, div.stFormSubmitButton > button:hover p { color: #111216 !important; }",
+    "div[data-testid='stPopover'] > button { background: #FFFFFF !important; color: #111216 !important; border: 1.5px solid #D4D4D8 !important; border-radius: 10px !important; font-weight: 700 !important; }",
+    "div[data-testid='stPopover'] > button:hover { background: #FACC15 !important; border-color: #111216 !important; }",
+    ".official-badge { display: inline-block; background: #111216; color: #FACC15 !important; font-size: 11px; font-weight: 700; padding: 6px 16px; border-radius: 999px; margin-bottom: 12px; }",
+    ".main-heading { font-size: 38px; font-weight: 800; color: #111216 !important; margin: 0; }",
+    ".sub-heading { font-size: 15.5px; color: #3F3F46 !important; max-width: 600px; margin: 10px auto 22px auto; }",
+    ".dark-card { background-color: #14151A; border: 1px solid #27272A; border-top: 4px solid #FACC15; border-radius: 14px; padding: 18px 22px; margin-bottom: 12px; box-shadow: 0 10px 24px rgba(0,0,0,0.24); animation: fadeSlideUp 0.45s ease both; transition: transform 0.22s ease, border-color 0.22s ease; }",
+    ".dark-card:hover { transform: translateY(-2px); border-color: #FACC15; }",
+    ".card-solved { border-top: 4px solid #22C55E !important; }",
+    ".card-title { color: #FFFFFF !important; font-size: 17px; font-weight: 700; margin: 0 0 6px 0; }",
+    ".card-text { color: #E4E4E7 !important; font-size: 14px; line-height: 1.5; margin: 0; }",
+    ".gold-pill { background: #27272A; color: #FACC15 !important; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; display: inline-block; }",
+    ".green-pill { background: rgba(34,197,94,0.18); color: #4ADE80 !important; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; display: inline-block; }",
+    ".progress-track { width: 100%; height: 10px; background: #27272A; border-radius: 999px; overflow: hidden; margin-top: 8px; }",
+    ".progress-fill { height: 100%; background: linear-gradient(90deg, #EAB308, #FACC15, #FEF08A, #FACC15); background-size: 200% 200%; animation: goldShimmer 3s ease infinite; border-radius: 999px; }",
+    ".top-decor-bar { background: #14151A; border: 1px solid #27272A; border-radius: 12px; padding: 11px 18px; display: flex; justify-content: space-between; align-items: center; }",
+    ".flame-3d { display: inline-block; font-size: 26px; animation: flamePulse 2s infinite; margin-right: 6px; }",
+    ".ai-box { background: #1C1D24; border-left: 4px solid #FACC15; border-radius: 10px; padding: 14px 18px; margin-top: 8px; color: #F4F4F5 !important; font-size: 14px; line-height: 1.55; }",
+    "</style>"
+]
+st.markdown("".join(css_parts), unsafe_allow_html=True)
+if not st.session_state.logged_in:
     st.markdown('<div style="text-align:center; padding-top:14px;" class="anim-block"><div class="official-badge">ГОСУДАРСТВЕННАЯ ИТОГОВАЯ АТТЕСТАЦИЯ • ОГЭ И ЕГЭ</div><h1 class="main-heading">Центр подготовки к экзаменам</h1><p class="sub-heading">Индивидуальный план подготовки, актуальные задания открытого банка ФИПИ и пошаговый разбор сложных тем.</p></div>', unsafe_allow_html=True)
     _, center_col, _ = st.columns([1, 1.35, 1])
     with center_col:
@@ -334,5 +357,3 @@ if active_sec == "Курсы подготовки":
             if idx + col_i >= len(subj_list):
                 break
             subj_name, subj_data = subj_list[idx + col_i]
-            tasks = subj_data.get("tasks", [])
-            
