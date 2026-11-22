@@ -339,6 +339,8 @@ if st.session_state.profile_open:
 
 all_courses = load_courses_data(include_db=True)
 exam_subjects = all_courses.get(exam_type, {})
+if not exam_subjects:
+    exam_subjects = all_courses.get("ЕГЭ", {})
 active_sec = st.session_state.active_section
 
 if active_sec == "Курсы подготовки":
