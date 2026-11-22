@@ -141,14 +141,6 @@ def get_solved_ids(username: str) -> set:
 
 def load_courses_data(include_db: bool = True) -> dict:
     data = json.loads(json.dumps(BANK_DATA))
-    if os.path.exists(COURSES_FILE):
-        try:
-            with open(COURSES_FILE, "r", encoding="utf-8") as f:
-                loaded = json.load(f)
-                if isinstance(loaded, dict):
-                    data = loaded
-        except Exception:
-            pass
     if include_db:
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
