@@ -371,7 +371,7 @@ if active_sec == "Курсы подготовки":
                         update_profile(username, exam_type, ug, accent_color, custom_status, avatar_icon)
                         st.rerun()
                 st.write("")
-                elif active_sec == "Все задания банка ФИПИ":
+elif active_sec == "Все задания банка ФИПИ":
     st.markdown(f'<div class="dark-card" style="margin-top:14px;"><div class="card-title" style="font-size:22px;">Открытый банк заданий ФИПИ • {exam_type}</div><p class="card-text">Решайте реальные задания, получайте +15 XP за верный ответ и пополняйте базу новыми задачами.</p></div>', unsafe_allow_html=True)
     f1, f2, f3 = st.columns([2.2, 1.5, 1.8])
     opts = ["Все предметы"] + list(exam_subjects.keys())
