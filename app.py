@@ -351,7 +351,7 @@ if active_sec == "Курсы подготовки":
             if idx + col_i >= len(subj_list):
                 break
             subj_name, subj_data = subj_list[idx + col_i]
-                        tasks = subj_data.get("tasks", [])
+            tasks = subj_data.get("tasks", [])
             tot_t, sol_t = len(tasks), sum(1 for t in tasks if t["id"] in solved_ids)
             pct_t = int((sol_t / tot_t) * 100) if tot_t else 0
             max_sc, min_sc = subj_data.get("max_score", 100), subj_data.get("min_score", 0)
