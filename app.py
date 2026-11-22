@@ -5,6 +5,7 @@ import sqlite3
 from datetime import date, timedelta
 import streamlit as st
 from ai_tutor import ask_tutor
+from bank_data import BANK_DATA
 
 st.set_page_config(page_title="Центр подготовки к экзаменам — ОГЭ и ЕГЭ", layout="wide", initial_sidebar_state="collapsed")
 st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
@@ -139,7 +140,7 @@ def get_solved_ids(username: str) -> set:
 
 
 def load_courses_data(include_db: bool = True) -> dict:
-    data = {"ЕГЭ": {}, "ОГЭ": {}}
+    data = json.loads(json.dumps(BANK_DATA))
     if os.path.exists(COURSES_FILE):
         try:
             with open(COURSES_FILE, "r", encoding="utf-8") as f:
