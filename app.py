@@ -338,12 +338,12 @@ if st.session_state.profile_open:
             st.rerun()
 
 all_courses = load_courses_data(include_db=True)
-exam_subjects = all_courses.get(exam_type, {})
-if not exam_subjects:
-    exam_subjects = all_courses.get("ЕГЭ", {})
+exam_key = exam_type if exam_type in all_courses and all_courses[exam_type] else "ЕГЭ"
+exam_subjects = all_courses.get(exam_key, BANK_DATA["ЕГЭ"])
 active_sec = st.session_state.active_section
 
 if active_sec == "Курсы подготовки":
+        st.caption(f"Загружено предметов: {len(exam_subjects)}")
     st.markdown(f'<div class="dark-card" style="margin-top:14px;"><div class="card-title" style="font-size:22px;">Курсы подготовки к {exam_type}</div><p class="card-text">Выберите предмет, задайте целевой балл и переходите к решению актуальных заданий ФИПИ.</p></div>', unsafe_allow_html=True)
     subj_list = list(exam_subjects.items())
     for idx in range(0, len(subj_list), 2):
