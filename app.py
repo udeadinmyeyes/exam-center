@@ -166,7 +166,7 @@ def normalize_ans(val: str) -> str:
 
 
 init_db()
-    qp_user = st.query_params.get("u", "")
+qp_user = st.query_params.get("u", "")
 if "logged_in" not in st.session_state:
     if qp_user and user_exists(qp_user):
         st.session_state.logged_in = True
