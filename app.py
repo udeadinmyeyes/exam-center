@@ -351,3 +351,127 @@ if active_sec == "Курсы подготовки":
             if idx + col_i >= len(subj_list):
                 break
             subj_name, subj_data = subj_list[idx + col_i]
+                        tasks = subj_data.get("tasks", [])
+            tot_t, sol_t = len(tasks), sum(1 for t in tasks if t["id"] in solved_ids)
+            pct_t = int((sol_t / tot_t) * 100) if tot_t else 0
+            max_sc, min_sc = subj_data.get("max_score", 100), subj_data.get("min_score", 0)
+            cur_goal = max(min_sc, min(max_sc, int(subject_goals.get(subj_name, max_sc))))
+            with cols[col_i]:
+                st.markdown(f'<div class="dark-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span class="card-title" style="margin:0;">{subj_data.get("icon","📘")} {subj_name}</span><span class="gold-pill">Цель: {cur_goal}/{max_sc}</span></div><p class="card-text" style="min-height:42px;margin-bottom:10px;">{subj_data.get("desc","")}</p><div style="display:flex;justify-content:space-between;color:#A1A1AA;font-size:12px;"><span>Решено: {sol_t} из {tot_t}</span><span>{pct_t}%</span></div><div class="progress-track"><div class="progress-fill" style="width:{pct_t}%;"></div></div></div>', unsafe_allow_html=True)
+                b1, b2 = st.columns([1.2, 1])
+                if b1.button("Решать задания →", key=f"go_{exam_type}_{subj_name}", use_container_width=True):
+                    st.session_state.selected_subject = subj_name
+                    st.session_state.active_section = "Все задания банка ФИПИ"
+                    st.rerun()
+                with b2.popover("🎯 Цель", use_container_width=True):
+                    ng = st.slider("Целевой балл", min_sc, max_sc, cur_goal, key=f"sl_{exam_type}_{subj_name}")
+                    if st.button("Сохранить", key=f"sv_{exam_type}_{subj_name}", use_container_width=True):
+                        ug = dict(subject_goals)
+                        ug[subj_name] = ng
+                        update_profile(username, exam_type, ug, accent_color, custom_status, avatar_icon)
+                        st.rerun()
+                st.write("")
+                elif active_sec == "Все задания банка ФИПИ":
+    st.markdown(f'<div class="dark-card" style="margin-top:14px;"><div class="card-title" style="font-size:22px;">Открытый банк заданий ФИПИ • {exam_type}</div><p class="card-text">Решайте реальные задания, получайте +15 XP за верный ответ и пополняйте базу новыми задачами.</p></div>', unsafe_allow_html=True)
+    f1, f2, f3 = st.columns([2.2, 1.5, 1.8])
+    opts = ["Все предметы"] + list(exam_subjects.keys())
+    def_i = opts.index(st.session_state.selected_subject) if st.session_state.selected_subject in opts else 0
+    chosen_subj = f1.selectbox("Предмет:", opts, index=def_i)
+    st.session_state.selected_subject = chosen_subj
+    chosen_status = f2.selectbox("Статус:", ["Все задания", "Нерешённые", "Выполненные"])
+    with f3:
+        st.write("")
+        with st.popover("➕ Пополнить базу", use_container_width=True):
+            if exam_subjects:
+                a_subj = st.selectbox("Предмет:", list(exam_subjects.keys()), key="a_s")
+                a_num = st.text_input("Номер КИМ:", placeholder="Задание 12", key="a_n")
+                a_top = st.text_input("Тема:", placeholder="Производная", key="a_t")
+                a_dif = st.selectbox("Сложность:", ["Базовый", "Повышенный", "Высокий"], key="a_d")
+                a_q = st.text_area("Условие задания ФИПИ:", key="a_q")
+                a_a = st.text_input("Правильный ответ:", key="a_a")
+                a_h = st.text_input("Подсказка:", key="a_h")
+                if st.button("Сохранить в базу", use_container_width=True, key="a_btn"):
+                    if a_q.strip() and a_a.strip():
+                        add_new_fipi_task(exam_type, a_subj, a_num, a_top, a_dif, a_q, a_a, a_h)
+                        st.success("Задание сохранено!")
+                        st.rerun()
+
+    filtered = [(sn, sd.get("icon", "📘"), t) for sn, sd in exam_subjects.items() if chosen_subj in ("Все предметы", sn) for t in sd.get("tasks", []) if not ((chosen_status == "Нерешённые" and t["id"] in solved_ids) or (chosen_status == "Выполненные" and t["id"] not in solved_ids))]
+    if not filtered:
+        st.info("По выбранным фильтрам заданий пока нет.")
+    for s_name, s_icon, task in filtered:
+        tid = task["id"]
+        done = tid in solved_ids
+        badge = '<span class="green-pill">✓ Выполнено (+15 XP)</span>' if done else f'<span class="gold-pill">{task.get("difficulty","Базовый")}</span>'
+        st.markdown(f'<div class="dark-card {"card-solved" if done else ""}"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px;"><span class="gold-pill">{s_icon} {s_name} • {task.get("num","")} • {task.get("topic","")}</span>{badge}</div><p class="card-text" style="font-size:15.5px;color:#FFF!important;">{task["question"]}</p></div>', unsafe_allow_html=True)
+        c_in, c_ok, c_ht = st.columns([3.5, 1.3, 1.2])
+        u_ans = c_in.text_input("Ответ", key=f"in_{tid}", label_visibility="collapsed", placeholder="Введите ответ...")
+        if c_ok.button("Проверить", key=f"ok_{tid}", use_container_width=True):
+            if normalize_ans(u_ans) == normalize_ans(str(task["answer"])):
+                added = mark_task_solved(username, tid, 15)
+                st.session_state[f"msg_{tid}"] = ("ok", f"Верно! Ответ: {task['answer']}. {'+15 XP!' if added else ''}")
+                if added:
+                    st.rerun()
+            else:
+                st.session_state[f"msg_{tid}"] = ("err", f"Неверно («{u_ans}»). Попробуйте ещё или откройте ИИ-разбор.")
+        if c_ht.button("Подсказка", key=f"ht_{tid}", use_container_width=True):
+            st.session_state[f"sh_{tid}"] = not st.session_state.get(f"sh_{tid}", False)
+        if st.session_state.get(f"sh_{tid}"):
+            st.markdown(f'<div class="ai-box"><strong style="color:#FACC15;">💡 Подсказка:</strong> {task.get("hint","")}</div>', unsafe_allow_html=True)
+        if f"msg_{tid}" in st.session_state:
+            k, m = st.session_state[f"msg_{tid}"]
+            (st.success if k == "ok" else st.error)(m)
+        with st.expander("🤖 Пошаговый разбор от ИИ-преподавателя"):
+            req = st.text_input("Уточнение (необязательно):", placeholder="Объясни максимально просто", key=f"rq_{tid}")
+            if st.button("Разобрать решение", key=f"tb_{tid}"):
+                with st.spinner("Готовим объяснение..."):
+                    st.session_state[f"ta_{tid}"] = ask_tutor(task["question"], u_ans.strip() or "Нет ответа", str(task["answer"]), req)
+            if f"ta_{tid}" in st.session_state:
+                st.markdown(f'<div class="ai-box">{st.session_state[f"ta_{tid}"].replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
+        st.write("")
+        elif active_sec == "Квиз":
+    st.markdown(f'<div class="dark-card" style="margin-top:14px;"><div class="card-title" style="font-size:22px;">Экспресс-квиз • {exam_type}</div><p class="card-text">Мини-тест из 5 реальных заданий для быстрой проверки знаний.</p></div>', unsafe_allow_html=True)
+    q1, q2 = st.columns([2.5, 1.5])
+    q_subj = q1.selectbox("Тема квиза:", ["Все предметы (Микс)"] + list(exam_subjects.keys()))
+    start_q = q2.button("🚀 Новый квиз", use_container_width=True)
+    if start_q or "quiz_q" not in st.session_state or st.session_state.get("quiz_m") != exam_type:
+        pool = [(sn, sd.get("icon", "📘"), t) for sn, sd in exam_subjects.items() if q_subj in ("Все предметы (Микс)", sn) for t in sd.get("tasks", [])]
+        random.shuffle(pool)
+        st.session_state.quiz_q = pool[:5]
+        st.session_state.quiz_m = exam_type
+        st.session_state.quiz_done = False
+        if start_q:
+            st.rerun()
+    ql = st.session_state.get("quiz_q", [])
+    if ql:
+        with st.form("q_form"):
+            ans_map = {}
+            for i, (sn, sic, qt) in enumerate(ql, 1):
+                st.markdown(f'<div class="dark-card"><span class="gold-pill">Вопрос {i}/{len(ql)} • {sic} {sn}</span><p class="card-text" style="color:#FFF!important;margin-top:8px;">{qt["question"]}</p></div>', unsafe_allow_html=True)
+                ans_map[qt["id"]] = st.text_input(f"Ответ {i}:", key=f"qi_{i}_{qt['id']}")
+            if st.form_submit_button("Проверить квиз", use_container_width=True):
+                ok_c, earned, det = 0, 0, []
+                for sn, sic, qt in ql:
+                    uv = ans_map.get(qt["id"], "")
+                    ok = normalize_ans(uv) == normalize_ans(str(qt["answer"]))
+                    if ok:
+                        ok_c += 1
+                        if mark_task_solved(username, qt["id"], 15):
+                            earned += 15
+                    det.append((sn, qt, uv, ok))
+                st.session_state.quiz_done = True
+                st.session_state.quiz_res = (ok_c, len(ql), earned, det)
+        if st.session_state.get("quiz_done") and "quiz_res" in st.session_state:
+            oc, tc, er, dt = st.session_state.quiz_res
+            pct = int((oc / tc) * 100)
+            st.markdown(f'<div class="dark-card"><div style="display:flex;justify-content:space-between;color:#FACC15;font-weight:700;"><span>Результат: {oc} из {tc} ({pct}%)</span><span>+{er} XP</span></div><div class="progress-track"><div class="progress-fill" style="width:{pct}%;"></div></div></div>', unsafe_allow_html=True)
+            for sn, qt, uv, ok in dt:
+                (st.success if ok else st.error)(f"{'✓' if ok else '✕'} [{sn}] Ваш ответ: {uv or '—'} | Верный: {qt['answer']}")
+
+elif active_sec == "Рейтинг":
+    st.markdown('<div class="dark-card" style="margin-top:14px;"><div class="card-title" style="font-size:22px;">Рейтинг обучающихся платформы</div><p class="card-text">Решайте задания, копите опыт и поднимайтесь в таблице лидеров.</p></div>', unsafe_allow_html=True)
+    for idx, (ln, le, lx, ls, lt, la, lsol) in enumerate(get_leaderboard(), 1):
+        med = "🥇" if idx == 1 else ("🥈" if idx == 2 else ("🥉" if idx == 3 else f"#{idx}"))
+        brd = "border:2px solid #FACC15;" if ln == username else ""
+        st.markdown(f'<div class="dark-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;{brd}"><div><strong style="color:#FACC15;font-size:18px;margin-right:10px;">{med}</strong><span style="font-size:20px;margin-right:6px;">{la}</span><strong style="color:#FFF;font-size:16px;">{ln}</strong> <span class="gold-pill">{lt} • {le}</span></div><div style="color:#FACC15;font-weight:700;">✅ {lsol} &nbsp;|&nbsp; 🔥 {ls} дн. &nbsp;|&nbsp; ⚡ {lx} XP</div></div>', unsafe_allow_html=True)
+        
