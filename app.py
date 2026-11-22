@@ -429,7 +429,7 @@ elif active_sec == "Все задания банка ФИПИ":
             if f"ta_{tid}" in st.session_state:
                 st.markdown(f'<div class="ai-box">{st.session_state[f"ta_{tid}"].replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
         st.write("")
-        elif active_sec == "Квиз":
+elif active_sec == "Квиз":
     st.markdown(f'<div class="dark-card" style="margin-top:14px;"><div class="card-title" style="font-size:22px;">Экспресс-квиз • {exam_type}</div><p class="card-text">Мини-тест из 5 реальных заданий для быстрой проверки знаний.</p></div>', unsafe_allow_html=True)
     q1, q2 = st.columns([2.5, 1.5])
     q_subj = q1.selectbox("Тема квиза:", ["Все предметы (Микс)"] + list(exam_subjects.keys()))
